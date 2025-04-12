@@ -11,14 +11,20 @@
   "host_permissions": [
     "*://twitter.com/*",
     "*://x.com/*",
-    "*://*.reddit.com/*"
+    "*://*.reddit.com/*",
+    "*://*.linkedin.com/*"
   ],
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["*://twitter.com/*", "*://x.com/*", "*://*.reddit.com/*"],
+      "matches": [
+        "*://twitter.com/*",
+        "*://x.com/*",
+        "*://*.reddit.com/*",
+        "*://*.linkedin.com/*"
+      ],
       "js": ["content.js"],
       "run_at": "document_idle"
     }

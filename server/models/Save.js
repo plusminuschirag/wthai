@@ -16,6 +16,7 @@ const SaveSchema = new Schema({
     },
     x: [ContentItemSchema], // Array for Twitter/X bookmarks
     reddit: [ContentItemSchema], // ADDED: Array for Reddit saves
+    linkedin: [ContentItemSchema], // ADDED: Array for LinkedIn saves
     // Add other platforms here as needed, e.g.:
     // youtube: [ContentItemSchema],
 }, { timestamps: true });
@@ -25,6 +26,9 @@ SaveSchema.index({ userId: 1, 'x.url': 1 });
 
 // ADDED: Index the URL within the 'reddit' array
 SaveSchema.index({ userId: 1, 'reddit.url': 1 }); 
+
+// ADDED: Index the URL within the 'linkedin' array
+SaveSchema.index({ userId: 1, 'linkedin.url': 1 }); 
 
 const Save = mongoose.model('Save', SaveSchema);
 

@@ -1,23 +1,21 @@
 // content.js
-console.log("Content Script Loaded - WhoTheHellAmI");
+console.log("[WTHAI:ContentScript] Script loaded.");
 
 function sendMessageToBackground(platform, url) {
-    console.log(`Sending ${platform} URL to background:`, url);
+    console.log(`[WTHAI] Sending message: ${platform} - ${url}`);
     chrome.runtime.sendMessage({
         action: "saveBookmark",
         platform: platform,
         url: url
     })
     .then(response => {
-        console.log("Background script response:", response);
-        // Visual feedback is handled in the button click listener now
+        console.log(`[WTHAI] Background response:`, response);
     })
     .catch(error => {
-        console.error("Error sending message to background script:", error);
-        if (error.message.includes("Receiving end does not exist")) {
-            console.warn("Background script might not be active.");
+        console.error(`[WTHAI] Error sending message:`, error.message);
+        if (error.message && error.message.includes("Receiving end does not exist")) {
+            console.warn("[WTHAI] Background script inactive?");
         }
-        // TODO: Add error feedback to the button?
     });
 }
 
@@ -205,6 +203,46 @@ function handleReddit() {
     }
 }
 
+// --- LinkedIn Specific Logic ---
+function handleLinkedIn() {
+    console.log("[WTHAI] Handling LinkedIn page"); // Simplified
+
+    document.body.addEventListener('click', (event) => {
+        // Find the ellipsis button
+        const optionsButton = event.target.closest('button.feed-shared-control-menu__trigger');
+
+        if (optionsButton) {
+            console.log("[WTHAI:LinkedIn] Options button clicked."); // Keep
+
+            // Find the post container
+            const postContainer = optionsButton.closest('[data-urn],[data-id]');
+
+            if (postContainer) {
+                // Extract URN/ID
+                const postUrn = postContainer.getAttribute('data-urn') || postContainer.getAttribute('data-id');
+                console.log("[WTHAI:LinkedIn] Extracted URN/ID:", postUrn); // Keep
+
+                // Validate and construct URL
+                if (postUrn && (postUrn.startsWith('urn:li:share:') || postUrn.startsWith('urn:li:activity:'))) {
+                    const postUrl = `https://www.linkedin.com/feed/update/${postUrn}/`;
+                    console.log("[WTHAI:LinkedIn] Constructed Post URL:", postUrl); // Keep
+
+                    // Send after delay
+                    setTimeout(() => {
+                         sendMessageToBackground('linkedin', postUrl);
+                    }, 100);
+
+                } else {
+                    console.error("[WTHAI:LinkedIn] Invalid URN/ID found:", postUrn); // Simplified error
+                }
+            } else {
+                console.error("[WTHAI:LinkedIn] Could not find post container for button:", optionsButton); // Simplified error
+            }
+        }
+        // No log if the click wasn't the target button
+    }, true);
+}
+
 // --- Main Execution Logic ---
 function initialize() {
     const hostname = window.location.hostname;
@@ -215,6 +253,9 @@ function initialize() {
         // Delay slightly allows Reddit's JS to build the initial DOM elements
         // Adjust timeout if buttons don't appear reliably on first load
         setTimeout(handleReddit, 500);
+    } else if (hostname.includes('linkedin.com')) {
+        // LinkedIn might also benefit from a slight delay
+        setTimeout(handleLinkedIn, 500);
     } else {
         console.log("Content script active on unrecognized page:", hostname);
     }
