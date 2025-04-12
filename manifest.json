@@ -6,5 +6,13 @@
   "action": {
     "default_popup": "popup/popup.html",
     "default_icon": "assets/logo.png"
+  },
+  "permissions": ["identity", "identity.email"],
+  "oauth2": {
+    "client_id": "42463408610-1ck3pp9hnkqc3b8atr9fkrc17motc6vc.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/userinfo.profile"
+    ]
   }
 }
