@@ -15,13 +15,16 @@ const SaveSchema = new Schema({
         unique: true // Each user should have only one 'saves' document
     },
     x: [ContentItemSchema], // Array for Twitter/X bookmarks
+    reddit: [ContentItemSchema], // ADDED: Array for Reddit saves
     // Add other platforms here as needed, e.g.:
-    // reddit: [ContentItemSchema],
     // youtube: [ContentItemSchema],
 }, { timestamps: true });
 
 // Index the URL within the 'x' array for faster checking
 SaveSchema.index({ userId: 1, 'x.url': 1 }); 
+
+// ADDED: Index the URL within the 'reddit' array
+SaveSchema.index({ userId: 1, 'reddit.url': 1 }); 
 
 const Save = mongoose.model('Save', SaveSchema);
 

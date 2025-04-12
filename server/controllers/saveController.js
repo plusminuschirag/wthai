@@ -1,6 +1,6 @@
 const xController = require('./xController');
 // Import other platform controllers here as they are created
-// const redditController = require('./redditController');
+const redditController = require('./redditController');
 
 exports.saveContent = (req, res) => {
   const { platform } = req.body;
@@ -15,6 +15,9 @@ exports.saveContent = (req, res) => {
     case 'x':
     case 'twitter':
       xController.saveXContent(req, res);
+      break;
+    case 'reddit':
+      redditController.saveRedditContent(req, res);
       break;
     // Add cases for other platforms
     // case 'reddit':
