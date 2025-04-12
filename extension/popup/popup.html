@@ -22,7 +22,12 @@
 <body>
   <h3>Sign In</h3>
   <div id="userInfo" style="display: none;">
-    <p>Welcome, <span id="userEmail"></span>!</p>
+    <p>
+        Welcome, 
+        <img id="userPicture" style="display: none; width: 24px; height: 24px; border-radius: 50%; vertical-align: middle; margin-right: 4px;">
+        <span id="userName" style="font-weight: bold;"></span> 
+        (<span id="userEmail"></span>)!
+    </p>
     <button id="signOutButton">Sign Out</button>
   </div>
   <div id="signInSection">
