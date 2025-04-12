@@ -243,6 +243,140 @@ function handleLinkedIn() {
     }, true);
 }
 
+// --- ChatGPT Specific Logic ---
+function handleChatGPT() {
+    console.log("[WTHAI:ChatGPT] handleChatGPT function called.");
+
+    const observer = new MutationObserver((mutationsList, obs) => {
+        console.log("[WTHAI:ChatGPT] MutationObserver callback triggered.");
+        const dialogSelector = 'div[role="dialog"][data-state="open"][class*="max-w-[550px]"]';
+
+        for (const mutation of mutationsList) {
+            let initialDialogElement = null;
+
+            // Find the dialog container when it's added or its state changes
+            if (mutation.type === 'childList') {
+                mutation.addedNodes.forEach(node => {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        if (node.matches && node.matches(dialogSelector)) {
+                            initialDialogElement = node;
+                        } else {
+                            initialDialogElement = node.querySelector(dialogSelector);
+                        }
+                        if (initialDialogElement) return;
+                    }
+                });
+            } else if (mutation.type === 'attributes' && mutation.attributeName === 'data-state') {
+                if (mutation.target.matches && mutation.target.matches(dialogSelector)) {
+                    initialDialogElement = mutation.target;
+                }
+            }
+
+            if (initialDialogElement) {
+                console.log("[WTHAI:ChatGPT] Initial dialog container potentially found. Waiting 1000ms for its content..."); // Reflects 1000ms delay
+
+                // Add delay *before* searching for the update button
+                setTimeout(() => {
+                    // Re-query the DOM for the dialog INSIDE the timeout
+                    const currentDialogElement = document.querySelector(dialogSelector);
+                    if (!currentDialogElement) {
+                         console.log("[WTHAI:ChatGPT] Dialog disappeared before searching for Update button.");
+                        return;
+                    }
+
+                    console.log("[WTHAI:ChatGPT] Searching for 'Update link' button after 1000ms delay..."); // Reflects 1000ms delay
+                    const updateButtonSelector = 'button.btn-primary';
+                    const potentialButtons = currentDialogElement.querySelectorAll(updateButtonSelector);
+                    let updateButton = null;
+
+                    potentialButtons.forEach(btn => {
+                        if (btn.textContent?.includes('Update link')) {
+                            updateButton = btn;
+                        }
+                    });
+
+                    if (updateButton && !updateButton.dataset.wthaiListenerAttached) {
+                        console.log("[WTHAI:ChatGPT] 'Update link' button found. Attaching click listener.");
+                        updateButton.dataset.wthaiListenerAttached = 'true';
+
+                        updateButton.addEventListener('click', () => {
+                            console.log("[WTHAI:ChatGPT] 'Update link' button clicked. Waiting 3000ms for content update...");
+
+                            setTimeout(() => {
+                                console.log("[WTHAI:ChatGPT] Checking for share elements after update click delay.");
+                                const updatedDialogElement = document.querySelector(dialogSelector);
+                                if (!updatedDialogElement) {
+                                    console.log("[WTHAI:ChatGPT] Updated dialog element not found after click delay.");
+                                    return;
+                                }
+                                const buttonContainerSelector = 'div.mt-6.flex.justify-center.space-x-14';
+                                const socialShareContainer = updatedDialogElement.querySelector(buttonContainerSelector);
+                                const urlInput = updatedDialogElement.querySelector('input[type="text"][value^="https://chatgpt.com/share/"]:not([disabled])');
+                                const uniqueButtonClass = 'wthai-swooosh-chatgpt-button';
+                                console.log("[WTHAI:ChatGPT] Querying for:", { socialShareContainer, urlInput });
+                                if (socialShareContainer && urlInput && !socialShareContainer.querySelector(`.${uniqueButtonClass}`)) {
+                                    console.log("[WTHAI:ChatGPT] Found Share Container and URL Input after click.");
+                                    const shareUrl = urlInput.value;
+                                    if (shareUrl) {
+                                        console.log("[WTHAI:ChatGPT] Extracted share URL:", shareUrl);
+                                        // *** Inject Swooosh Button Logic (same as before) ***
+                                        const swoooshContainer = document.createElement('div');
+                                        swoooshContainer.className = `flex flex-col items-center ${uniqueButtonClass}`;
+                                        const swoooshButton = document.createElement('button');
+                                        swoooshButton.textContent = 'Swooosh';
+                                        swoooshButton.style.padding = '8px 12px';
+                                        swoooshButton.style.border = '1px solid #ccc';
+                                        swoooshButton.style.borderRadius = '20px';
+                                        swoooshButton.style.cursor = 'pointer';
+                                        swoooshButton.style.backgroundColor = 'var(--main-surface-secondary)';
+                                        swoooshButton.style.marginBottom = '4px';
+                                        const swoooshText = document.createElement('span');
+                                        swoooshText.className = 'text-token-text-secondary mt-1 text-xs font-semibold';
+                                        swoooshText.textContent = 'Swooosh';
+                                        swoooshContainer.appendChild(swoooshButton);
+                                        swoooshContainer.appendChild(swoooshText);
+                                        socialShareContainer.appendChild(swoooshContainer);
+                                        console.log("[WTHAI:ChatGPT] Swooosh button injected.");
+                                        swoooshButton.addEventListener('click', (event) => {
+                                            event.preventDefault();
+                                            event.stopPropagation();
+                                            console.log("[WTHAI:ChatGPT] Swooosh button clicked for URL:", shareUrl);
+                                            sendMessageToBackground('chatgpt', shareUrl);
+                                            swoooshButton.textContent = 'Swoooshed!';
+                                            swoooshButton.disabled = true;
+                                            swoooshButton.style.cursor = 'default';
+                                            swoooshButton.style.opacity = '0.6';
+                                            swoooshText.textContent = 'Swoooshed!';
+                                        });
+                                        // *** End of Injection Logic ***
+                                    } else {
+                                        console.warn(`[WTHAI:ChatGPT] Found URL input but failed to get value after click.`);
+                                    }
+                                } else {
+                                     if (!socialShareContainer) console.log("[WTHAI:ChatGPT] Did not find social share container after click.");
+                                     if (!urlInput) console.log("[WTHAI:ChatGPT] Did not find URL input after click.");
+                                     if (socialShareContainer && socialShareContainer.querySelector(`.${uniqueButtonClass}`)) console.log("[WTHAI:ChatGPT] Swooosh button already injected (checked after click).");
+                                }
+                            }, 3000); // Wait 3000ms after click for DOM update
+                        }, { once: true });
+                    } else if (updateButton && updateButton.dataset.wthaiListenerAttached) {
+                        console.log("[WTHAI:ChatGPT] 'Update link' button found, but listener already attached.");
+                    } else {
+                        console.log("[WTHAI:ChatGPT] 'Update link' button not found after 1000ms delay (or it's the final state dialog)."); // Reflects 1000ms delay
+                    }
+                }, 1000); // Wait 1000ms after container appears before searching button
+
+                // Exit the mutation loop once the dialog container is found and the timeout is set
+                break;
+            }
+        }
+    });
+
+    // Start observing the body for dialog additions/changes
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-state'] });
+    console.log("[WTHAI:ChatGPT] MutationObserver started.");
+}
+
 // --- Main Execution Logic ---
 function initialize() {
     const hostname = window.location.hostname;
@@ -256,6 +390,9 @@ function initialize() {
     } else if (hostname.includes('linkedin.com')) {
         // LinkedIn might also benefit from a slight delay
         setTimeout(handleLinkedIn, 500);
+    } else if (hostname.includes('chatgpt.com')) {
+        // ChatGPT also needs observation, start immediately or with slight delay
+        setTimeout(handleChatGPT, 500);
     } else {
         console.log("Content script active on unrecognized page:", hostname);
     }

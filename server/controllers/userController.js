@@ -4,17 +4,18 @@ const Save = require('../models/Save'); // Import the Save model
 
 // Helper function to get save counts
 const getSaveCounts = async (userId) => {
-  if (!userId) return { x: 0, reddit: 0, linkedin: 0 }; // Return zero counts if no userId
+  if (!userId) return { x: 0, reddit: 0, linkedin: 0, chatgpt: 0 }; // Return zero counts if no userId
   try {
-    const saves = await Save.findOne({ userId: userId }).select('x reddit linkedin'); // Select only needed fields
+    const saves = await Save.findOne({ userId: userId }).select('x reddit linkedin chatgpt'); // Select needed fields, including chatgpt
     return {
       x: saves?.x?.length || 0,
       reddit: saves?.reddit?.length || 0,
       linkedin: saves?.linkedin?.length || 0,
+      chatgpt: saves?.chatgpt?.length || 0, // Add count for chatgpt
     };
   } catch (error) {
     console.error(`Error fetching save counts for user ${userId}:`, error);
-    return { x: 0, reddit: 0, linkedin: 0 }; // Return zero counts on error
+    return { x: 0, reddit: 0, linkedin: 0, chatgpt: 0 }; // Return zero counts on error
   }
 };
 

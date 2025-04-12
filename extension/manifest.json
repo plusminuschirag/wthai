@@ -12,7 +12,8 @@
     "*://twitter.com/*",
     "*://x.com/*",
     "*://*.reddit.com/*",
-    "*://*.linkedin.com/*"
+    "*://*.linkedin.com/*",
+    "*://chatgpt.com/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -23,7 +24,8 @@
         "*://twitter.com/*",
         "*://x.com/*",
         "*://*.reddit.com/*",
-        "*://*.linkedin.com/*"
+        "*://*.linkedin.com/*",
+        "*://chatgpt.com/*"
       ],
       "js": ["content.js"],
       "run_at": "document_idle"

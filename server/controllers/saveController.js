@@ -2,6 +2,7 @@ const xController = require('./xController');
 // Import other platform controllers here as they are created
 const redditController = require('./redditController');
 const linkedinController = require('./linkedinController');
+const chatgptController = require('./chatgptController');
 
 exports.saveContent = (req, res) => {
   console.log("[WTHAI:SaveController:saveContent] Function entry.");
@@ -25,6 +26,9 @@ exports.saveContent = (req, res) => {
   } else if (platform === 'linkedin') {
     console.log('[WTHAI:SaveController:saveContent] Delegating to linkedinController...');
     linkedinController.saveLinkedInPost(req, res);
+  } else if (platform === 'chatgpt') {
+    console.log('[WTHAI:SaveController:saveContent] Delegating to chatgptController...');
+    chatgptController.saveChatGPTContent(req, res);
   } else {
     console.warn(`[WTHAI:SaveController:saveContent] Unsupported platform received: ${platform}`);
     res.status(400).send({ message: `Platform '${platform}' not supported.` });

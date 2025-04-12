@@ -16,19 +16,23 @@ const SaveSchema = new Schema({
     },
     x: [ContentItemSchema], // Array for Twitter/X bookmarks
     reddit: [ContentItemSchema], // ADDED: Array for Reddit saves
-    linkedin: [ContentItemSchema], // ADDED: Array for LinkedIn saves
+    linkedin: [ContentItemSchema], // CORRECTED: Array for LinkedIn saves (using ContentItemSchema)
+    chatgpt: [ContentItemSchema], // ADDED: Array for ChatGPT saves (using ContentItemSchema)
     // Add other platforms here as needed, e.g.:
     // youtube: [ContentItemSchema],
 }, { timestamps: true });
 
 // Index the URL within the 'x' array for faster checking
-SaveSchema.index({ userId: 1, 'x.url': 1 }); 
+SaveSchema.index({ userId: 1, 'x.url': 1 });
 
 // ADDED: Index the URL within the 'reddit' array
-SaveSchema.index({ userId: 1, 'reddit.url': 1 }); 
+SaveSchema.index({ userId: 1, 'reddit.url': 1 });
 
-// ADDED: Index the URL within the 'linkedin' array
-SaveSchema.index({ userId: 1, 'linkedin.url': 1 }); 
+// CORRECTED: Index the URL within the 'linkedin' array
+SaveSchema.index({ userId: 1, 'linkedin.url': 1 });
+
+// ADDED: Index the URL within the 'chatgpt' array
+SaveSchema.index({ userId: 1, 'chatgpt.url': 1 });
 
 const Save = mongoose.model('Save', SaveSchema);
 
