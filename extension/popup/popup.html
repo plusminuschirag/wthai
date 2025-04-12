@@ -22,18 +22,30 @@
 <body>
   <h3>Sign In</h3>
   <div id="userInfo" style="display: none;">
-    <p>
-        Welcome, 
-        <img id="userPicture" style="display: none; width: 24px; height: 24px; border-radius: 50%; vertical-align: middle; margin-right: 4px;">
-        <span id="userName" style="font-weight: bold;"></span> 
-        (<span id="userEmail"></span>)!
-    </p>
-    <button id="signOutButton">Sign Out</button>
+    <img id="userPicture" src="#" alt="User profile picture" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; vertical-align: middle;">
+    <div style="display: inline-block; vertical-align: middle;">
+        <span id="userName" style="display: block; font-weight: bold;"></span>
+        <span id="userEmail" style="display: block; font-size: 0.9em; color: grey;"></span>
+    </div>
+    <!-- Add Metrics Section -->
+    <div id="metricsSection" style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px;">
+        <strong>Saved Items:</strong>
+        <div style="margin-top: 5px;">
+            <span style="font-weight: 500;">X:</span> <span id="xCount">0</span>
+        </div>
+         <div style="margin-top: 5px;">
+            <span style="font-weight: 500;">Reddit:</span> <span id="redditCount">0</span>
+        </div>
+         <div style="margin-top: 5px;">
+            <span style="font-weight: 500;">LinkedIn:</span> <span id="linkedinCount">0</span>
+        </div>
+    </div>
+    <button id="signOutButton" style="margin-top: 15px;">Sign Out</button>
   </div>
   <div id="signInSection">
       <button id="signInButton">Sign In with Google</button>
   </div>
-  <div id="status"></div>
+  <div id="status" style="margin-top: 10px; font-size: 0.9em;"></div>
   <script src="popup.js"></script>
 </body>
 </html>

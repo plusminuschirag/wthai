@@ -7,6 +7,12 @@ const userPicture = document.getElementById('userPicture');
 const signInSectionDiv = document.getElementById('signInSection');
 const statusDiv = document.getElementById('status');
 
+// Add IDs for metric elements
+const metricsSectionDiv = document.getElementById('metricsSection');
+const xCountSpan = document.getElementById('xCount');
+const redditCountSpan = document.getElementById('redditCount');
+const linkedinCountSpan = document.getElementById('linkedinCount');
+
 const BACKEND_URL = 'http://localhost:3000/user';
 
 let currentToken = null;
@@ -25,6 +31,20 @@ function updateUI(signedIn, info = null) {
         } else {
             userPicture.style.display = 'none';
         }
+
+        // Update metrics display
+        if (info.metrics && metricsSectionDiv) {
+            xCountSpan.textContent = info.metrics.x?.toString() || '0';
+            redditCountSpan.textContent = info.metrics.reddit?.toString() || '0';
+            linkedinCountSpan.textContent = info.metrics.linkedin?.toString() || '0';
+            metricsSectionDiv.style.display = 'block'; // Ensure section is visible
+        } else if (metricsSectionDiv) {
+            xCountSpan.textContent = '0';
+            redditCountSpan.textContent = '0';
+            linkedinCountSpan.textContent = '0';
+            metricsSectionDiv.style.display = 'block'; // Keep section visible but with 0s
+        }
+
         statusDiv.textContent = '';
     } else {
         signInSectionDiv.style.display = 'block';
@@ -33,6 +53,15 @@ function updateUI(signedIn, info = null) {
         userEmailSpan.textContent = '';
         userPicture.style.display = 'none';
         userPicture.src = '';
+
+         // Reset metrics display on sign out
+        if (metricsSectionDiv) {
+             xCountSpan.textContent = '0';
+             redditCountSpan.textContent = '0';
+             linkedinCountSpan.textContent = '0';
+             metricsSectionDiv.style.display = 'none'; // Hide section when signed out
+        }
+
         currentToken = null;
         currentUserInfo = null;
     }
@@ -105,11 +134,13 @@ async function syncUserWithBackend(userInfo) {
 
         console.log('Backend sync successful:', responseData.message);
         showStatus('User data synced with backend.', false);
-        return true;
+        // Return the user object which now includes metrics
+        return responseData.user;
     } catch (error) {
         showStatus(`Error syncing with backend: ${error.message}`, true);
         console.error('Backend sync error details:', error);
-        return false;
+        // Return null or indicate failure, but don't return partial user info
+        return null;
     }
 }
 
@@ -128,15 +159,18 @@ signInButton.addEventListener('click', () => {
         }
 
         currentToken = token;
-        const userInfo = await fetchUserInfo(token);
+        const googleUserInfo = await fetchUserInfo(token);
 
-        if (userInfo) {
-            const synced = await syncUserWithBackend(userInfo);
-            if (synced) {
-                updateUI(true, userInfo);
+        if (googleUserInfo) {
+            // syncUserWithBackend now returns the full user object from backend
+            const backendUserInfo = await syncUserWithBackend(googleUserInfo);
+            if (backendUserInfo) {
+                // Pass the full backend user info (including metrics) to updateUI
+                updateUI(true, backendUserInfo); 
                 showStatus('Successfully signed in and synced!', false);
             } else {
-                updateUI(true, userInfo);
+                // Still update UI with Google info, but show sync error and 0 metrics
+                updateUI(true, { ...googleUserInfo, metrics: { x: 0, reddit: 0, linkedin: 0 } }); 
                 showStatus('Signed in, but failed to sync data with backend.', true);
             }
         } else {
@@ -179,13 +213,17 @@ document.addEventListener('DOMContentLoaded', () => {
             updateUI(false);
         } else {
             currentToken = token;
-            const userInfo = await fetchUserInfo(token);
-            if (userInfo) {
-                const synced = await syncUserWithBackend(userInfo);
-                 updateUI(true, userInfo);
-                 if (synced) {
+            const googleUserInfo = await fetchUserInfo(token);
+            if (googleUserInfo) {
+                // syncUserWithBackend now returns the full user object from backend
+                const backendUserInfo = await syncUserWithBackend(googleUserInfo);
+                 if (backendUserInfo) {
+                    // Pass the full backend user info (including metrics) to updateUI
+                    updateUI(true, backendUserInfo);
                     showStatus('Signed in and data synced.', false);
                  } else {
+                     // Still update UI with Google info, but show sync error and 0 metrics
+                     updateUI(true, { ...googleUserInfo, metrics: { x: 0, reddit: 0, linkedin: 0 } }); 
                      showStatus('Signed in, but failed to sync data with backend.', true);
                  }
             } else {

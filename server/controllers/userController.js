@@ -1,5 +1,22 @@
 // server/controllers/userController.js
 const User = require('../models/User'); // Import the User model
+const Save = require('../models/Save'); // Import the Save model
+
+// Helper function to get save counts
+const getSaveCounts = async (userId) => {
+  if (!userId) return { x: 0, reddit: 0, linkedin: 0 }; // Return zero counts if no userId
+  try {
+    const saves = await Save.findOne({ userId: userId }).select('x reddit linkedin'); // Select only needed fields
+    return {
+      x: saves?.x?.length || 0,
+      reddit: saves?.reddit?.length || 0,
+      linkedin: saves?.linkedin?.length || 0,
+    };
+  } catch (error) {
+    console.error(`Error fetching save counts for user ${userId}:`, error);
+    return { x: 0, reddit: 0, linkedin: 0 }; // Return zero counts on error
+  }
+};
 
 // Save or Update user details
 const saveUser = async (req, res) => { // Make function async
@@ -30,10 +47,24 @@ const saveUser = async (req, res) => { // Make function async
         new: true, // Return the updated document
         runValidators: true // Ensure schema validation runs on update
       } 
-    );
+    ).lean(); // Use .lean() for a plain JS object, makes adding properties easier
 
-    console.log(`User data saved/updated for userId: ${userId}`);
-    res.status(200).send({ message: 'User data synced successfully.', user: updatedUser }); // Send 200 OK for upsert
+    if (!updatedUser) {
+        // Should not happen with upsert: true, but good practice
+        return res.status(500).send({ error: 'Failed to save or find user data.' });
+    }
+
+    // Fetch save counts
+    const counts = await getSaveCounts(userId);
+
+    // Combine user data and counts
+    const responseData = {
+        ...updatedUser,
+        metrics: counts
+    };
+
+    console.log(`User data saved/updated for userId: ${userId}, Counts:`, counts);
+    res.status(200).send({ message: 'User data synced successfully.', user: responseData }); // Send combined data
 
   } catch (error) {
     console.error(`Error saving/updating user ${userId}:`, error);
@@ -54,10 +85,18 @@ const getUser = async (req, res) => { // Make function async
   }
 
   try {
-    const userData = await User.findOne({ userId: userId }); // Find by Google ID
+    const userData = await User.findOne({ userId: userId }).lean(); // Use .lean()
 
     if (userData) {
-      res.status(200).send(userData);
+      // Fetch save counts
+      const counts = await getSaveCounts(userId);
+       // Combine user data and counts
+      const responseData = {
+        ...userData,
+        metrics: counts
+      };
+      console.log(`User data fetched for userId: ${userId}, Counts:`, counts);
+      res.status(200).send(responseData); // Send combined data
     } else {
       res.status(404).send({ error: 'User data not found.' });
     }
