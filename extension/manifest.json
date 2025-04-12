@@ -7,7 +7,18 @@
     "default_popup": "popup/popup.html",
     "default_icon": "assets/logo.png"
   },
-  "permissions": ["identity", "identity.email"],
+  "permissions": ["identity", "identity.email", "scripting", "storage"],
+  "host_permissions": ["*://twitter.com/*", "*://x.com/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://twitter.com/*", "*://x.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
   "oauth2": {
     "client_id": "42463408610-1ck3pp9hnkqc3b8atr9fkrc17motc6vc.apps.googleusercontent.com",
     "scopes": [
