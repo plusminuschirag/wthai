@@ -2,13 +2,13 @@
 console.log("Background Service Worker Loaded");
 
 // const BACKEND_URL = 'http://localhost:3000/bookmarks/save'; // OLD ENDPOINT
-const BACKEND_URL = 'http://localhost:3000/save'; // NEW generic save endpoint
+const BACKEND_URL = 'http://localhost:3000/save'; // Generic save endpoint
 
-// Listen for messages from the content script
+// Listen for messages from content scripts or other parts of the extension
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    // Check if the message is specifically for saving an X bookmark
-    if (message.action === "saveBookmark" && message.url) { 
-        console.log("Background script received X URL:", message.url);
+    // Check if the message action is for saving a specific type of bookmark
+    if (message.action === "saveBookmark" && message.url && message.platform) {
+        console.log(`Background script received ${message.platform} URL to save:`, message.url);
 
         // --- Get User ID --- 
         chrome.identity.getProfileUserInfo({ accountStatus: 'ANY' }, (userInfo) => {
@@ -23,9 +23,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
             // --- Prepare Payload --- 
             const payload = {
-                platform: 'x', 
+                platform: message.platform, // Use platform from the message
                 url: message.url,
-                userId: userId // ADDED: Include the user ID
+                userId: userId // Include the authenticated user's Google ID
             };
 
             // --- Call Backend API --- 
@@ -55,9 +55,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             });
         });
 
-        // Return true because the response is sent asynchronously AFTER getProfileUserInfo completes
+        // Return true to indicate that sendResponse will be called asynchronously
         return true; 
     }
-    // Handle other potential messages or return false if not handled
+    // Return false if this listener doesn't handle the message type
     return false;
 }); 

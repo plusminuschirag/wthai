@@ -8,13 +8,17 @@
     "default_icon": "assets/logo.png"
   },
   "permissions": ["identity", "identity.email", "scripting", "storage"],
-  "host_permissions": ["*://twitter.com/*", "*://x.com/*"],
+  "host_permissions": [
+    "*://twitter.com/*",
+    "*://x.com/*",
+    "*://*.reddit.com/*"
+  ],
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["*://twitter.com/*", "*://x.com/*"],
+      "matches": ["*://twitter.com/*", "*://x.com/*", "*://*.reddit.com/*"],
       "js": ["content.js"],
       "run_at": "document_idle"
     }
