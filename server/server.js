@@ -1,37 +1,12 @@
 require('dotenv').config(); // Load .env file variables
 const express = require('express');
 const cors = require('cors');
-const mongoose = require('mongoose'); // Import mongoose
 const userRoutes = require('./routes/userRoutes'); // Import user routes
 // const bookmarkRoutes = require('./routes/bookmarkRoutes'); // REMOVED: Old import
 const saveRoutes = require('./routes/saveRoutes'); // ADDED: New import for generic save
 
 const app = express();
 const PORT = process.env.PORT || 3000; // Use port from .env or default to 3000
-const mongoUri = process.env.MONGODB_URI; // Get URI from .env
-
-// --- Database Connection ---
-if (!mongoUri) {
-  console.error("FATAL ERROR: MONGODB_URI is not defined in .env file.");
-  process.exit(1); // Exit if DB connection string is missing
-}
-
-mongoose.connect(mongoUri)
-  .then(() => console.log('MongoDB connected successfully.'))
-  .catch(err => {
-    console.error('MongoDB connection error:', err);
-    process.exit(1); // Exit on connection error
-  });
-
-mongoose.connection.on('disconnected', () => {
-  console.warn('MongoDB disconnected.');
-});
-
-mongoose.connection.on('error', (err) => {
-  console.error('MongoDB error event:', err);
-});
-// --- End Database Connection ---
-
 
 // Enable CORS for all origins
 app.use(cors());

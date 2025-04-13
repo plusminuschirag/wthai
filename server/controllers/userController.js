@@ -1,21 +1,52 @@
 // server/controllers/userController.js
 const { supabaseClient } = require('../config/supabase.js'); // Import Supabase client using destructuring
-const Save = require('../models/Save'); // Import the Save model (assuming it remains Mongoose)
+const { SUPPORTED_PLATFORMS } = require('../config/constants.js'); // Import constants
 
-// Helper function to get save counts
+// Helper function to get save counts from Supabase using RPC
 const getSaveCounts = async (userId) => {
-  if (!userId) return { x: 0, reddit: 0, linkedin: 0, chatgpt: 0 }; // Return zero counts if no userId
+  // Initialize final counts object
+  const finalCounts = {};
+
+  // If no userId provided, return 0 for all known platforms
+  if (!userId) {
+    SUPPORTED_PLATFORMS.forEach(platform => {
+        finalCounts[platform] = 0;
+    });
+    return finalCounts;
+  }
+
   try {
-    const saves = await Save.findOne({ userId: userId }).select('x reddit linkedin chatgpt'); // Select needed fields, including chatgpt
-    return {
-      x: saves?.x?.length || 0,
-      reddit: saves?.reddit?.length || 0,
-      linkedin: saves?.linkedin?.length || 0,
-      chatgpt: saves?.chatgpt?.length || 0, // Add count for chatgpt
-    };
+    // Call the database function to get counts efficiently
+    const { data, error } = await supabaseClient.rpc('get_save_counts_for_user', { p_userid: userId });
+
+    if (error) {
+      console.error(`[WTHAI:UserCtrl:getSaveCounts] Supabase RPC error for user ${userId}:`, error);
+      // Return empty counts on error (frontend will handle missing keys)
+      return finalCounts;
+    }
+
+    // Populate the counts directly from the RPC result
+    if (data) {
+        data.forEach(item => {
+            // Directly add the platform and count from the DB result
+            finalCounts[item.platform] = Number(item.count) || 0;
+        });
+    }
+    
+    // Ensure all supported platforms have a key, even if 0 (for consistency, balancing simplification with predictability)
+    SUPPORTED_PLATFORMS.forEach(platform => {
+        if (!finalCounts.hasOwnProperty(platform)) {
+            finalCounts[platform] = 0;
+        }
+    });
+
+    console.log(`[WTHAI:UserCtrl:getSaveCounts] Calculated counts via RPC for user ${userId}:`, finalCounts);
+    return finalCounts;
+
   } catch (error) {
-    console.error(`Error fetching save counts for user ${userId}:`, error);
-    return { x: 0, reddit: 0, linkedin: 0, chatgpt: 0 }; // Return zero counts on error
+    console.error(`[WTHAI:UserCtrl:getSaveCounts] Unexpected error fetching save counts for user ${userId}:`, error);
+    // Return empty counts on unexpected error
+    return finalCounts;
   }
 };
 
@@ -65,7 +96,7 @@ const saveUser = async (req, res) => {
       return res.status(500).send({ error: 'Failed to save or retrieve user data after upsert.' });
     }
 
-    // Fetch save counts (MongoDB part)
+    // Fetch save counts
     const counts = await getSaveCounts(userId);
 
     // Combine user data and counts
@@ -111,7 +142,7 @@ const getUser = async (req, res) => {
     }
 
     if (userData) {
-      // Fetch save counts (MongoDB part)
+      // Fetch save counts
       const counts = await getSaveCounts(userId);
       // Combine user data and counts
       const responseData = {

@@ -12,6 +12,7 @@ const metricsSectionDiv = document.getElementById('metricsSection');
 const xCountSpan = document.getElementById('xCount');
 const redditCountSpan = document.getElementById('redditCount');
 const linkedinCountSpan = document.getElementById('linkedinCount');
+const chatgptCountSpan = document.getElementById('chatgptCount');
 
 const BACKEND_URL = 'http://localhost:3000/user';
 
@@ -37,11 +38,13 @@ function updateUI(signedIn, info = null) {
             xCountSpan.textContent = info.metrics.x?.toString() || '0';
             redditCountSpan.textContent = info.metrics.reddit?.toString() || '0';
             linkedinCountSpan.textContent = info.metrics.linkedin?.toString() || '0';
+            chatgptCountSpan.textContent = info.metrics.chatgpt?.toString() || '0';
             metricsSectionDiv.style.display = 'block'; // Ensure section is visible
         } else if (metricsSectionDiv) {
             xCountSpan.textContent = '0';
             redditCountSpan.textContent = '0';
             linkedinCountSpan.textContent = '0';
+            chatgptCountSpan.textContent = '0';
             metricsSectionDiv.style.display = 'block'; // Keep section visible but with 0s
         }
 
@@ -59,6 +62,7 @@ function updateUI(signedIn, info = null) {
              xCountSpan.textContent = '0';
              redditCountSpan.textContent = '0';
              linkedinCountSpan.textContent = '0';
+             chatgptCountSpan.textContent = '0';
              metricsSectionDiv.style.display = 'none'; // Hide section when signed out
         }
 
@@ -170,7 +174,7 @@ signInButton.addEventListener('click', () => {
                 showStatus('Successfully signed in and synced!', false);
             } else {
                 // Still update UI with Google info, but show sync error and 0 metrics
-                updateUI(true, { ...googleUserInfo, metrics: { x: 0, reddit: 0, linkedin: 0 } }); 
+                updateUI(true, { ...googleUserInfo, metrics: { x: 0, reddit: 0, linkedin: 0, chatgpt: 0 } }); 
                 showStatus('Signed in, but failed to sync data with backend.', true);
             }
         } else {
@@ -223,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     showStatus('Signed in and data synced.', false);
                  } else {
                      // Still update UI with Google info, but show sync error and 0 metrics
-                     updateUI(true, { ...googleUserInfo, metrics: { x: 0, reddit: 0, linkedin: 0 } }); 
+                     updateUI(true, { ...googleUserInfo, metrics: { x: 0, reddit: 0, linkedin: 0, chatgpt: 0 } }); 
                      showStatus('Signed in, but failed to sync data with backend.', true);
                  }
             } else {
