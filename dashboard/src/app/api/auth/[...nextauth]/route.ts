@@ -1,4 +1,4 @@
-import NextAuth, { type User as NextAuthUser, type Account, type Profile, type Session, type DefaultSession } from 'next-auth';
+import NextAuth, { type NextAuthOptions, type User as NextAuthUser, type Account, type Session, type DefaultSession } from 'next-auth';
 import { type JWT } from 'next-auth/jwt';
 import GoogleProvider from 'next-auth/providers/google';
 
@@ -80,44 +80,36 @@ async function syncUserWithBackend(user: NextAuthUser): Promise<BackendUser | nu
   }
 }
 
-
-const handler = NextAuth({
+// Define the auth options object
+export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       authorization: {
         params: {
-          // Requesting profile and email scopes to get user info
           scope: 'openid email profile',
-          // Optional: prompt=consent forces the consent screen every time
-          // prompt: "consent",
-          // access_type: "offline",
-          // response_type: "code"
         },
       },
     }),
   ],
   session: {
-    strategy: 'jwt', // Use JWT for session management
+    strategy: 'jwt',
   },
   callbacks: {
-    // Using _profile naming convention to indicate it's intentionally unused.
-    async signIn({ user, account, profile: _profile }: { user: NextAuthUser, account: Account | null, profile?: Profile }): Promise<boolean> {
-      // This callback runs right after a successful sign-in (e.g., from Google)
+    async signIn({ user, account }: { user: NextAuthUser, account: Account | null }): Promise<boolean> {
       if (account?.provider === 'google' && user) {
         console.log(`[WTHAI:NextAuth:Callback:signIn] Google sign-in successful for user: ${user.id}`);
         const syncedUser = await syncUserWithBackend(user);
         if (!syncedUser) {
           console.error(`[WTHAI:NextAuth:Callback:signIn] Backend sync failed for user ${user.id}, blocking sign in.`);
-          return false; // Block sign-in if backend sync fails
+          return false;
         }
         console.log(`[WTHAI:NextAuth:Callback:signIn] Backend sync successful for user ${user.id}. Allowing sign in.`);
-        return true; // Allow sign-in
+        return true;
       }
-      return true; // Allow other sign-in methods
+      return true;
     },
-
     async jwt({ token, user, account }: { token: JWT, user?: NextAuthUser, account?: Account | null }): Promise<JWT> {
       const extendedToken = token as ExtendedJWT;
       if (account && user) {
@@ -131,19 +123,12 @@ const handler = NextAuth({
       }
       return extendedToken;
     },
-
-    // Adjust session callback signature and type handling
     async session({ session, token }: { session: Session; token: JWT }): Promise<Session> {
       const extendedToken = token as ExtendedJWT;
-
-      // Initialize session.user if it doesn't exist
       if (!session.user) {
-        session.user = {} as DefaultSession["user"]; // Initialize with default structure
+        session.user = {} as DefaultSession["user"];
       }
-
-      // Type assertion to add custom properties safely
       const userWithMetrics = session.user as ExtendedSession["user"];
-
       if (extendedToken.backendUser) {
         userWithMetrics.id = extendedToken.backendUser.userId;
         userWithMetrics.name = extendedToken.backendUser.name;
@@ -155,17 +140,22 @@ const handler = NextAuth({
         console.warn(`[WTHAI:NextAuth:Callback:session] Using partial user data for session as backend sync failed for user ${extendedToken.id}`);
         userWithMetrics.metrics = null;
       }
-
-      return session; // Return the modified session object
+      return session;
+    },
+    async redirect({ baseUrl }: { baseUrl: string }): Promise<string> {
+      // Always redirect to dashboard after successful sign-in
+      console.log(`[WTHAI:NextAuth:Callback:redirect] Forcing redirect to ${baseUrl}/dashboard`);
+      return baseUrl + '/dashboard';
     },
   },
   pages: {
-    // Optional: Define custom pages if needed
-    // signIn: '/auth/signin', 
-    // error: '/auth/error', // Error code passed in query string as ?error=
+    // signIn: '/auth/signin',
+    // error: '/auth/error',
   },
-  // Add secret from env
   secret: process.env.NEXTAUTH_SECRET,
-});
+};
+
+// Pass the options to NextAuth
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST }; 
