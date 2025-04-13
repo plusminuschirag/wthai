@@ -59,4 +59,43 @@ exports.saveContent = async (req, res) => { // Make function async
     console.error(`[WTHAI:SaveController:saveContent] Unexpected error saving item for user ${userId}, platform ${platform}:`, err);
     res.status(500).send({ message: 'An unexpected error occurred while saving the item.' });
   }
+};
+
+// Get all saved items for a specific user
+exports.getSavedItemsByUser = async (req, res) => {
+  console.log("[WTHAI:SaveController:getSavedItemsByUser] Function entry.");
+  const { userId } = req.params; // Get userId from route parameters
+
+  console.log(`[WTHAI:SaveController:getSavedItemsByUser] Received request for userId: ${userId}`);
+
+  if (!userId) {
+    console.error('[WTHAI:SaveController:getSavedItemsByUser] Validation failed: Missing userId.');
+    return res.status(400).send({ message: 'User ID is required.' });
+  }
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('SavedItem')
+      .select('itemId, platform, url, savedAt') // Select specific columns
+      .eq('userId', userId) // Filter by userId
+      .order('savedAt', { ascending: false }); // Order by newest first
+
+    if (error) {
+      console.error(`[WTHAI:SaveController:getSavedItemsByUser] Supabase error fetching items for user ${userId}:`, error);
+      // Handle specific errors if needed, e.g., invalid userId format
+      return res.status(500).send({ message: 'Failed to retrieve saved items.' });
+    }
+
+    if (!data) {
+        console.log(`[WTHAI:SaveController:getSavedItemsByUser] No saved items found for user ${userId}`);
+        return res.status(404).send({ message: 'No saved items found for this user.', items: [] });
+    }
+
+    console.log(`[WTHAI:SaveController:getSavedItemsByUser] Successfully retrieved ${data.length} items for user ${userId}`);
+    res.status(200).send({ items: data }); // Send the array of items
+
+  } catch (err) {
+    console.error(`[WTHAI:SaveController:getSavedItemsByUser] Unexpected error fetching items for user ${userId}:`, err);
+    res.status(500).send({ message: 'An unexpected error occurred while retrieving saved items.' });
+  }
 }; 
