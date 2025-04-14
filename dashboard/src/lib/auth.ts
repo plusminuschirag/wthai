@@ -37,13 +37,17 @@ if (!process.env.GOOGLE_CLIENT_SECRET) {
   throw new Error('Missing GOOGLE_CLIENT_SECRET in environment variables.');
 }
 if (!process.env.BACKEND_API_URL) {
+  console.error('[WTHAI:NextAuth:Init] Missing BACKEND_API_URL!');
   throw new Error('Missing BACKEND_API_URL in environment variables.');
 }
+console.log(`[WTHAI:NextAuth:Init] Using BACKEND_API_URL: ${process.env.BACKEND_API_URL}`);
 
 const BACKEND_USER_API = `${process.env.BACKEND_API_URL}/user`;
 
 // Helper function to sync user with backend
 async function syncUserWithBackend(user: NextAuthUser): Promise<BackendUser | null> {
+  console.log(`[WTHAI:NextAuth:Sync] Syncing user. Target API: ${BACKEND_USER_API}`);
+
   if (!user.id || !user.email || !user.name) {
     console.error('[WTHAI:NextAuth:Sync] Missing required user info for backend sync:', user);
     return null;
@@ -67,6 +71,7 @@ async function syncUserWithBackend(user: NextAuthUser): Promise<BackendUser | nu
     const responseData = await response.json();
 
     if (!response.ok) {
+      console.error(`[WTHAI:NextAuth:Sync] Backend API returned non-OK status: ${response.status}. Body:`, responseData);
       console.error(`[WTHAI:NextAuth:Sync] Backend sync failed for user ${user.id}: ${response.status} - ${responseData.error || responseData.message}`);
       return null; // Indicate sync failure
     }
@@ -74,7 +79,8 @@ async function syncUserWithBackend(user: NextAuthUser): Promise<BackendUser | nu
     console.log(`[WTHAI:NextAuth:Sync] Backend sync successful for user ${user.id}`);
     return responseData.user as BackendUser; // Return the full user object from backend
   } catch (error) {
-    console.error(`[WTHAI:NextAuth:Sync] Error during backend sync for user ${user.id}:`, error);
+    console.error(`[WTHAI:NextAuth:Sync] Error during backend sync fetch for user ${user.id}:`, error);
+    console.error('[WTHAI:NextAuth:Sync] Full error object:', JSON.stringify(error, null, 2));
     return null;
   }
 }
