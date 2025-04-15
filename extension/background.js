@@ -1,8 +1,8 @@
 // background.js
 console.log("[WTHAI:Background] Service Worker Loaded");
 
-// const BACKEND_URL = 'http://localhost:3000/bookmarks/save'; // OLD ENDPOINT
-const BACKEND_URL = 'http://localhost:3000/save'; // Generic save endpoint
+const BACKEND_URL = 'https://server-42463408610.us-central1.run.app';
+const BACKEND_SAVE_URL = `${BACKEND_URL}/save`;
 
 // Listen for messages from content scripts or other parts of the extension
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -34,8 +34,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             console.log("[WTHAI:Background:onMessage] Prepared payload for backend:", payload);
 
             // --- Call Backend API ---
-            console.log(`[WTHAI:Background:onMessage] Sending fetch request to backend: ${BACKEND_URL}`);
-            fetch(BACKEND_URL, {
+            console.log(`[WTHAI:Background:onMessage] Sending fetch request to backend: ${BACKEND_SAVE_URL}`);
+            fetch(BACKEND_SAVE_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

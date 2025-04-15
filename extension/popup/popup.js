@@ -14,7 +14,8 @@ const redditCountSpan = document.getElementById('redditCount');
 const linkedinCountSpan = document.getElementById('linkedinCount');
 const chatgptCountSpan = document.getElementById('chatgptCount');
 
-const BACKEND_URL = 'http://localhost:3000/user';
+const BACKEND_URL = 'https://server-42463408610.us-central1.run.app';
+const BACKEND_USER_URL = `${BACKEND_URL}/user`;
 
 let currentToken = null;
 let currentUserInfo = null;
@@ -117,7 +118,7 @@ async function syncUserWithBackend(userInfo) {
     }
     showStatus('Syncing user data with backend...', false);
     try {
-        const response = await fetch(BACKEND_URL, {
+        const response = await fetch(BACKEND_USER_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
