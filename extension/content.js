@@ -364,7 +364,7 @@ function handleChatGPT() {
                     } else {
                         console.log("[WTHAI:ChatGPT] 'Update link' button not found after 1000ms delay (or it's the final state dialog)."); // Reflects 1000ms delay
                     }
-                }, 1000); // Wait 1000ms after container appears before searching button
+                }, 3000); // Wait 1000ms after container appears before searching button
 
                 // Exit the mutation loop once the dialog container is found and the timeout is set
                 break;
