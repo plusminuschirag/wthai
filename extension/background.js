@@ -21,13 +21,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
                 console.log("[WTHAI:Background:onMessage] Retrieved from storage:", storageData);
 
-                if (!storageData.userInfo || !storageData.userInfo.id) {
-                    console.error("[WTHAI:Background:onMessage] User info or ID not found in storage.", storageData);
-                    sendResponse({ status: "error", message: "User not signed in or user info missing from storage." });
+                // --- Check for userInfo and specifically userInfo.userId ---
+                if (!storageData.userInfo || !storageData.userInfo.userId) { 
+                    console.error("[WTHAI:Background:onMessage] User info or userId property not found in storage.", storageData);
+                    sendResponse({ status: "error", message: "User not signed in or user info missing from storage (userId property missing)." });
                     return; // Stop processing
                 }
 
-                const userId = storageData.userInfo.id;
+                // --- Use userInfo.userId --- 
+                const userId = storageData.userInfo.userId;
                 console.log("[WTHAI:Background:onMessage] Obtained userId from storage:", userId);
 
                 // --- Prepare Payload ---
@@ -60,12 +62,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 console.log("[WTHAI:Background:onMessage] Backend response OK. Attempting to parse JSON...");
                 const data = await response.json();
                 console.log("[WTHAI:Background:onMessage] Successfully parsed backend JSON response:", data);
+
+                // --- Send success response back to the caller (content script) ---
                 sendResponse({ status: "success", data: data });
 
             } catch (error) {
                 console.error(`[WTHAI:Background:onMessage] Error during storage access or backend fetch for user:`, error);
                 // Ensure userId is defined for the error message, or provide a default
-                const userIdForError = (typeof userId !== 'undefined') ? userId : 'unknown'; 
+                // Use the correctly accessed userId variable here
+                const userIdForError = (typeof userId !== 'undefined' && userId) ? userId : 'unknown';
                 sendResponse({ status: "error", message: `Error processing bookmark for user ${userIdForError}: ${error.message}` });
             }
         })(); // Immediately invoke the async function

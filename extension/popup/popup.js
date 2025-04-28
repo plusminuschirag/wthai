@@ -189,6 +189,7 @@ signInButton.addEventListener('click', () => {
             const backendUserInfo = await syncUserWithBackend(googleUserInfo);
             if (backendUserInfo) {
                 // Store the newly obtained token and backend user info
+                console.log("[WTHAI:Popup] Storing user info to storage:", backendUserInfo);
                 await setStoredAuth(token, backendUserInfo);
                 updateUI(true, backendUserInfo);
                 showStatus('Successfully signed in and synced!', false);
@@ -270,35 +271,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     showStatus('Checking sign-in status...');
     const { token: storedToken, userInfo: storedUserInfo } = await getStoredAuth();
 
-    if (storedToken && storedUserInfo) {
-        console.log("Found stored token and user info. Updating UI.");
-        updateUI(true, storedUserInfo);
-        showStatus('Signed in.', false);
+    // Check for essential info needed by syncUserWithBackend
+    if (storedToken && storedUserInfo && storedUserInfo.userId && storedUserInfo.name && storedUserInfo.email) {
+        console.log("[WTHAI:Popup] Found stored token and user info. Syncing with backend for latest data...");
+        showStatus('Fetching latest data...', false); // Show loading status
 
-        // Optional: Verify token validity silently in the background
-        // This adds complexity but ensures the token hasn't expired
-        // You could add a function verifyToken(storedToken) here
-        // that calls getAuthToken({interactive: false}) and handles
-        // potential errors (e.g., clearing storage if token invalid).
-        // For now, we'll assume the stored token is valid until an
-        // operation fails or the user signs out.
+        // Call syncUserWithBackend to get the latest data
+        // Pass the necessary fields from storedUserInfo
+        const syncedUserInfo = await syncUserWithBackend({
+            id: storedUserInfo.userId, // syncUserWithBackend expects 'id'
+            name: storedUserInfo.name,
+            email: storedUserInfo.email,
+            picture: storedUserInfo.picture // Pass picture if available
+        });
+
+        if (syncedUserInfo) {
+            // syncUserWithBackend succeeded, update UI with fresh data
+            updateUI(true, syncedUserInfo);
+            showStatus('Signed in.', false);
+            // Update storage with the fresh data returned from sync
+            try {
+                 await setStoredAuth(storedToken, syncedUserInfo);
+                 console.log("[WTHAI:Popup] Updated local storage with synced user data.");
+            } catch(e) {
+                 console.error("[WTHAI:Popup] Failed to update storage with synced data", e);
+            }
+        } else {
+            // syncUserWithBackend failed - Show stale data from storage as fallback & show error
+            console.warn("[WTHAI:Popup] Failed to sync with backend. Displaying potentially stale data from storage.");
+            updateUI(true, storedUserInfo); // Use the data we originally loaded
+            showStatus('Signed in (failed to fetch latest data).', true); // Show error from syncUserWithBackend
+        }
 
     } else {
-        console.log("No stored token/info or incomplete data. User needs to sign in.");
+        console.log("[WTHAI:Popup] No valid stored token/userInfo found or missing required fields. User needs to sign in.");
         showStatus('Please sign in.', false);
         updateUI(false);
-        // Optional: Attempt a silent sign-in if no token is found?
-        // chrome.identity.getAuthToken({ interactive: false }, async (token) => { ... });
-        // This might automatically log them back in if they are signed into Chrome
-        // and have previously granted permissions, but could be confusing.
-        // Let's stick to requiring manual sign-in for now.
     }
-
-    /* // Remove old logic based on getAuthToken on load
-    chrome.identity.getAuthToken({ interactive: false }, async (token) => {
-        if (chrome.runtime.lastError || !token) {
-// ... existing code ...
-        }
-    });
-    */
-}); // Make the listener async 
+}); 

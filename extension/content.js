@@ -3,6 +3,11 @@ console.log("[WTHAI:ContentScript] Script loaded.");
 
 function sendMessageToBackground(platform, url) {
     console.log(`[WTHAI] Sending message: ${platform} - ${url}`);
+    // Check if the runtime API is available
+    if (typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.sendMessage) {
+        console.error("[WTHAI] chrome.runtime.sendMessage is not available in this context. Possible iframe?");
+        return; // Exit if the API isn't available
+    }
     chrome.runtime.sendMessage({
         action: "saveBookmark",
         platform: platform,
