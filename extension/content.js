@@ -11,9 +11,11 @@ import { handleChatGPT } from './controllers/chatgptController.js';
  * Sends a message to the background script to save a bookmark.
  * @param {string} platform - The platform identifier (e.g., 'x', 'reddit').
  * @param {string} url - The URL to bookmark.
+ * @param {string | null} [content] - Optional text content of the item.
+ * @param {string[]} [assets] - Optional array of asset URLs.
  */
-function sendMessageToBackground(platform, url) {
-    console.log(`[WTHAI:ContentScript] Sending message: ${platform} - ${url}`);
+function sendMessageToBackground(platform, url, content = null, assets = []) {
+    console.log(`[WTHAI:ContentScript] Sending message: ${platform} - ${url}, Content: ${content ? 'Present' : 'Absent'}, Assets: ${assets.length}`);
     // Check if the runtime API is available
     if (typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.sendMessage) {
         console.error("[WTHAI:ContentScript] chrome.runtime.sendMessage is not available. Check execution context.");
@@ -22,7 +24,9 @@ function sendMessageToBackground(platform, url) {
     chrome.runtime.sendMessage({
         action: "saveBookmark",
         platform: platform,
-        url: url
+        url: url,
+        content: content,
+        assets: assets
     })
     .then(response => {
         console.log(`[WTHAI:ContentScript] Background response:`, response);

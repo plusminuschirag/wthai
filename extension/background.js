@@ -9,8 +9,11 @@ const BACKEND_SAVE_URL = `${BACKEND_URL}/save`;
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log("[WTHAI:Background:onMessage] Received message:", message, "From sender:", sender);
 
-    if (message.action === "saveBookmark" && message.url && message.platform) {
-        console.log(`[WTHAI:Background:onMessage] Handling 'saveBookmark' for platform: ${message.platform}, URL: ${message.url}`);
+    // Extract content and assets from the message, provide defaults
+    const { action, platform, url, content = null, assets = [] } = message;
+
+    if (action === "saveBookmark" && url && platform) {
+        console.log(`[WTHAI:Background:onMessage] Handling 'saveBookmark' for platform: ${platform}, URL: ${url}, Content: ${content ? 'Present' : 'Absent'}, Assets: ${assets.length}`);
 
         // --- Get User ID from Storage --- asynchronous operation
         (async () => {
@@ -34,9 +37,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
                 // --- Prepare Payload ---
                 const payload = {
-                    platform: message.platform,
-                    url: message.url,
-                    userId: userId
+                    platform: platform,
+                    url: url,
+                    userId: userId,
+                    content: content,
+                    assets: assets
                 };
                 console.log("[WTHAI:Background:onMessage] Prepared payload for backend:", payload);
 
