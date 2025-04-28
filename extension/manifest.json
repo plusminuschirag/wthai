@@ -16,7 +16,8 @@
     "*://chatgpt.com/*"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.bundle.js",
+    "type": "module"
   },
   "content_scripts": [
     {
@@ -27,7 +28,7 @@
         "*://*.linkedin.com/*",
         "*://chatgpt.com/*"
       ],
-      "js": ["content.js"],
+      "js": ["content.bundle.js"],
       "run_at": "document_idle"
     }
   ],

@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "@types/chrome": "^0.0.317",
+    "vite": "^6.3.3",
+    "vite-plugin-static-copy": "^2.3.1"
+  },
+  "scripts": {
+    "build": "vite build"
+  }
+}
