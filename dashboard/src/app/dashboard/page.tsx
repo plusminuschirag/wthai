@@ -19,10 +19,12 @@ interface DashboardUser {
 
 // Type for saved items fetched from the backend
 interface SavedItem {
-    itemId: number;
+    itemId: string; // Changed to string based on backend (UUID)
     platform: string;
     url: string;
     savedAt: string; // ISO date string
+    content?: string | null; // Added content (optional)
+    assets?: string[];     // Added assets (optional array of strings)
 }
 
 // Function to fetch saved items
@@ -122,6 +124,8 @@ export default async function DashboardPage() {
               <TableRow>
                 <TableHead className="w-[100px]">Platform</TableHead>
                 <TableHead>URL</TableHead>
+                <TableHead>Content</TableHead>
+                <TableHead>Assets</TableHead>
                 <TableHead className="text-right">Saved At</TableHead>
               </TableRow>
             </TableHeader>
@@ -132,19 +136,27 @@ export default async function DashboardPage() {
                     <TableCell>
                       <Badge variant="secondary">{item.platform}</Badge>
                     </TableCell>
-                    <TableCell className="font-medium truncate max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl">
+                    <TableCell className="font-medium truncate max-w-xs">
                       <a href={item.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
                         {item.url}
                       </a>
                     </TableCell>
+                    <TableCell className="text-sm text-muted-foreground truncate max-w-xs">
+                      {item.content || "-"}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {item.assets && item.assets.length > 0 
+                        ? `${item.assets.length} asset(s)` 
+                        : "-"}
+                    </TableCell>
                     <TableCell className="text-right">
-                      {format(new Date(item.savedAt), 'PPpp')} {/* Format date nicely */}
+                      {format(new Date(item.savedAt), 'PPpp')}
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={3} className="h-24 text-center">
+                  <TableCell colSpan={5} className="h-24 text-center">
                     No items saved yet.
                   </TableCell>
                 </TableRow>

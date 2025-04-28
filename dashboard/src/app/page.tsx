@@ -1,51 +1,34 @@
-'use client';
+import { redirect } from 'next/navigation';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth"; // Import authOptions from the correct path
 
-import React, { useEffect } from "react";
+// Remove 'use client' - this is now a Server Component
+
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
 import IntegrationsSection from "@/components/IntegrationsSection";
 import DemoSection from "@/components/DemoSection";
 import WaitlistSection from "@/components/WaitlistSection";
 
-export default function Home() {
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            if (entry.target.classList) {
-              entry.target.classList.add("animate-fade-in");
-            }
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      {
-        root: null,
-        rootMargin: "0px",
-        threshold: 0.1,
-      }
-    );
+// Convert the function to async to await session check
+export default async function Home() {
+  // Get the server-side session using next-auth
+  const session = await getServerSession(authOptions);
 
-    const animateElements = document.querySelectorAll(".should-animate");
-    if (animateElements.length > 0) {
-      animateElements.forEach((el) => observer.observe(el));
-    }
+  // If user has an active session, redirect to the dashboard
+  if (session) {
+    redirect('/dashboard');
+  }
 
-    return () => {
-      if (animateElements.length > 0) {
-        animateElements.forEach((el) => observer.unobserve(el));
-      }
-    };
-  }, []);
-
+  // If user is not logged in, render the landing page sections
+  // Note: The client-side animation logic (`useEffect`) was removed.
   return (
     <>
-      <HeroSection className="should-animate" />
-      <FeaturesSection className="should-animate" />
-      <IntegrationsSection className="should-animate" />
-      <DemoSection className="should-animate" />
-      <WaitlistSection className="should-animate" />
+      <HeroSection /> 
+      <FeaturesSection />
+      <IntegrationsSection />
+      <DemoSection />
+      <WaitlistSection />
     </>
   );
 }
