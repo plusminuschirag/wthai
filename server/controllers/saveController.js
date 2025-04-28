@@ -5,9 +5,9 @@ const { SUPPORTED_PLATFORMS } = require('../config/constants.js'); // Import con
 
 exports.saveContent = async (req, res) => { // Make function async
   console.log("[WTHAI:SaveController:saveContent] Function entry.");
-  const { platform, userId, url } = req.body;
+  const { platform, userId, url, content, assets } = req.body;
 
-  console.log(`[WTHAI:SaveController:saveContent] Received request: Platform=${platform}, UserId=${userId ? 'Present' : 'Missing'}, Url=${url}`);
+  console.log(`[WTHAI:SaveController:saveContent] Received request: Platform=${platform}, UserId=${userId ? 'Present' : 'Missing'}, Url=${url}, Content=${content ? 'Present' : 'Absent'}, Assets=${Array.isArray(assets) ? assets.length : 'Absent/Invalid'}`);
 
   // Basic validation
   if (!platform || !userId || !url) {
@@ -29,6 +29,8 @@ exports.saveContent = async (req, res) => { // Make function async
         userId: userId,
         platform: platform.toLowerCase(), // Ensure consistent casing, matching ENUM
         url: url,
+        content: content,
+        assets: Array.isArray(assets) ? assets : [],
         // savedAt will be set by default in the database
       })
       .select() // Optionally select the inserted row
@@ -76,7 +78,7 @@ exports.getSavedItemsByUser = async (req, res) => {
   try {
     const { data, error } = await supabaseClient
       .from('SavedItem')
-      .select('itemId, platform, url, savedAt') // Select specific columns
+      .select('itemId, platform, url, savedAt, content, assets') // Select specific columns
       .eq('userId', userId) // Filter by userId
       .order('savedAt', { ascending: false }); // Order by newest first
 
